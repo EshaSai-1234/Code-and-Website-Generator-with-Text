@@ -1,0 +1,29 @@
+# Node dependencies
+node_modules/
+
+# Environment configuration
+.env
+.env.local
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated downloads and build output
+*.zip
+dist/
+coverage/
+
+# System and OS Files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

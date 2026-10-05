@@ -1,0 +1,25 @@
+{
+  "name": "code-website-generator",
+  "version": "1.0.0",
+  "description": "Free AI-powered website & code generator using Node.js, Monaco Editor, JSZip and local Ollama models",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "ai",
+    "website-generator",
+    "ollama",
+    "monaco-editor",
+    "express",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

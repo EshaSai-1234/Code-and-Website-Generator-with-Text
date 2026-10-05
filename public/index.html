@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code and Website Generator with Text</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- JSZip CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <!-- Monaco Editor Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="brand-title">
+          <h1>Code and Website Generator with Text</h1>
+          <span class="badge">Local AI • Vanilla Web</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Model Selection -->
+        <div class="model-selector-wrapper">
+          <label for="modelSelect" class="model-label">
+            <span class="status-dot" id="ollamaStatusDot"></span>
+            <i class="fa-solid fa-microchip"></i> Model:
+          </label>
+          <select id="modelSelect" class="model-select">
+            <option value="">Loading Ollama models...</option>
+          </select>
+          <button id="refreshModelsBtn" class="icon-btn-small" title="Refresh Ollama Models">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
+          <i class="fa-solid fa-moon"></i>
+          <span id="themeToggleText">Dark</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Ollama Offline Warning Banner (Hidden by default) -->
+    <div id="ollamaWarningBanner" class="warning-banner hidden">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span id="ollamaWarningText">Ollama connection warning. Make sure Ollama is running locally at http://127.0.0.1:11434</span>
+      <button class="banner-close-btn" onclick="document.getElementById('ollamaWarningBanner').classList.add('hidden')">&times;</button>
+    </div>
+
+    <!-- Main Content Layout -->
+    <main class="app-main">
+      
+      <!-- Top Control Section: Prompt Input & Actions -->
+      <section class="prompt-section">
+        <div class="prompt-card">
+          
+          <!-- Template Tags -->
+          <div class="template-container">
+            <span class="template-label"><i class="fa-solid fa-bolt"></i> Prompt Templates:</span>
+            <div class="template-chips">
+              <button class="template-chip" data-template="portfolio">
+                <i class="fa-solid fa-user-tie"></i> Portfolio
+              </button>
+              <button class="template-chip" data-template="landing">
+                <i class="fa-solid fa-rocket"></i> Landing Page
+              </button>
+              <button class="template-chip" data-template="blog">
+                <i class="fa-solid fa-newspaper"></i> Tech Blog
+              </button>
+              <button class="template-chip" data-template="ecommerce">
+                <i class="fa-solid fa-cart-shopping"></i> E-commerce
+              </button>
+              <button class="template-chip" data-template="dashboard">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+              </button>
+            </div>
+          </div>
+
+          <!-- Prompt Textarea -->
+          <div class="prompt-input-wrapper">
+            <textarea 
+              id="promptInput" 
+              class="prompt-textarea" 
+              placeholder="Describe the website you want to generate in plain English... (e.g. 'A sleek modern portfolio with hero section, project grid, dark theme, contact form, and smooth scroll')"
+              rows="3"
+            ></textarea>
+            <div class="prompt-actions-inline">
+              <span class="prompt-shortcut-hint">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons Bar -->
+          <div class="action-bar">
+            <div class="action-group primary-actions">
+              <button id="generateBtn" class="btn btn-primary">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Generate</span>
+              </button>
+              <button id="regenerateBtn" class="btn btn-secondary" disabled>
+                <i class="fa-solid fa-rotate"></i>
+                <span>Regenerate</span>
+              </button>
+              <button id="improveBtn" class="btn btn-secondary" disabled title="AI enhances styling, design, layout & animations">
+                <i class="fa-solid fa-gem"></i>
+                <span>Improve Design</span>
+              </button>
+              <button id="fixBtn" class="btn btn-warning" disabled title="AI fixes syntax or JS runtime errors">
+                <i class="fa-solid fa-wrench"></i>
+                <span>Fix Code</span>
+              </button>
+            </div>
+
+            <div class="action-group utility-actions">
+              <button id="copyBtn" class="btn btn-outline" disabled title="Copy current active file to clipboard">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy Code</span>
+              </button>
+              <button id="downloadBtn" class="btn btn-success" disabled title="Download ZIP containing index.html, style.css, script.js">
+                <i class="fa-solid fa-file-zipper"></i>
+                <span>Download ZIP</span>
+              </button>
+              <button id="clearBtn" class="btn btn-outline-danger" title="Clear prompt and reset workspace">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Workspace Area: Code Editors + Live Preview Split View -->
+      <section class="workspace-section">
+        
+        <!-- Left Pane: Monaco Code Editor -->
+        <div class="editor-pane">
+          <div class="pane-header">
+            <div class="editor-tabs">
+              <button class="editor-tab active" data-file="html">
+                <i class="fa-brands fa-html5 tab-icon html-icon"></i>
+                <span>index.html</span>
+              </button>
+              <button class="editor-tab" data-file="css">
+                <i class="fa-brands fa-css3-alt tab-icon css-icon"></i>
+                <span>style.css</span>
+              </button>
+              <button class="editor-tab" data-file="js">
+                <i class="fa-brands fa-js tab-icon js-icon"></i>
+                <span>script.js</span>
+              </button>
+            </div>
+            
+            <div class="editor-status">
+              <span id="syncStatus" class="sync-status">
+                <i class="fa-solid fa-check-circle"></i> Syncing Preview
+              </span>
+            </div>
+          </div>
+
+          <div class="monaco-wrapper">
+            <div id="monacoContainer" class="monaco-container"></div>
+            
+            <!-- Empty state placeholder when no code is generated yet -->
+            <div id="editorPlaceholder" class="editor-placeholder">
+              <div class="placeholder-content">
+                <i class="fa-solid fa-code placeholder-icon"></i>
+                <h3>No Code Generated Yet</h3>
+                <p>Select a template above or enter a prompt and click <strong>Generate</strong> to create your website code.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Splitter Resizer (Visual divider) -->
+        <div class="pane-divider" id="paneDivider"></div>
+
+        <!-- Right Pane: Sandboxed Live Preview -->
+        <div class="preview-pane">
+          <div class="pane-header">
+            <div class="preview-title">
+              <i class="fa-solid fa-eye"></i>
+              <span>Live Responsive Preview</span>
+            </div>
+
+            <!-- Viewport Controls -->
+            <div class="viewport-controls">
+              <button class="viewport-btn active" data-width="100%" title="Desktop View (100%)">
+                <i class="fa-solid fa-desktop"></i>
+              </button>
+              <button class="viewport-btn" data-width="768px" title="Tablet View (768px)">
+                <i class="fa-solid fa-tablet-screen-button"></i>
+              </button>
+              <button class="viewport-btn" data-width="375px" title="Mobile View (375px)">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+              </button>
+              
+              <div class="divider-v"></div>
+
+              <button id="refreshPreviewBtn" class="icon-btn" title="Reload Preview">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+              <button id="openNewTabBtn" class="icon-btn" title="Open Preview in New Window">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Iframe Container -->
+          <div class="iframe-container" id="iframeContainer">
+            <iframe 
+              id="previewIframe" 
+              class="preview-iframe"
+              sandbox="allow-scripts allow-modals allow-same-origin allow-forms" 
+              title="Generated Website Preview"
+            ></iframe>
+          </div>
+
+          <!-- Console & Error Log Panel at bottom of preview -->
+          <div id="errorLogPanel" class="error-log-panel hidden">
+            <div class="error-panel-header">
+              <span><i class="fa-solid fa-triangle-exclamation"></i> Preview Console Errors Detected (<span id="errorCount">0</span>)</span>
+              <div class="error-panel-actions">
+                <button id="autoFixBtn" class="btn btn-warning btn-xs">
+                  <i class="fa-solid fa-wrench"></i> Auto-Fix with AI
+                </button>
+                <button id="dismissErrorsBtn" class="icon-btn-xs" title="Dismiss">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+            <div id="errorLogList" class="error-log-list"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+  </div>
+
+  <!-- App Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>
